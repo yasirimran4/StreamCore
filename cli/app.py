@@ -15,7 +15,7 @@ async def prompt(text: str) -> str:
 def show_menu(user):
     print("\n=== Movie App CLI ===")
     if user is not None:
-        print(f"Logged in as: {user.get_username()} ({user.get_role()})")
+        print(f"Logged in as: {user.get_username()} with this role : ({user.get_role()})")
     else:
         print("Not logged in")
     print("1. Register")
@@ -64,7 +64,7 @@ async def register_user(auth_service):
     password = (await prompt("Password: ")).strip()
     role = (await prompt("Role (admin/user): ")).strip().lower()
     if role not in ["admin", "user"]:
-        print("Invalid role. Defaulting to 'user'.")
+        print("Invalid role. So Using 'user'.")
         role = "user"
 
     user = User(username, password, role)
