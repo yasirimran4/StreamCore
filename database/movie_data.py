@@ -18,11 +18,16 @@ class MovieData:
             await self.__db.rollback()  # Rollback if any db error occurs
             print("DB error:", e)
 
-    async def edit_movie(self, new_title, movie_id):
+    async def edit_movie(self, new_movie, movie_id):
         try:
             await self.__db.execute(
-                "UPDATE movies SET title = ? WHERE id = ?",
-                (new_title, movie_id),
+                "UPDATE movies SET title = ?, likes = ? , views = ? WHERE id = ?",
+                (
+                    new_movie.get_title(),
+                    new_movie.get_likes(),
+                    new_movie.get_views(),
+                    movie_id,
+                ),
             )
             await self.__db.commit()
         except Exception as e:
@@ -73,7 +78,7 @@ class MovieData:
     async def watch_history(self, user_id):
         try:
             result = await self.__db.execute(
-                "SELECT history.id, history.movie_id, movies.title, history.watched_at "
+                "SELECT history.id, history.movie_id, movies.title "
                 "FROM history JOIN movies ON history.movie_id = movies.id "
                 "WHERE history.user_id = ?",
                 (user_id,),

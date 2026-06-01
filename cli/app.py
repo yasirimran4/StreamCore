@@ -53,10 +53,10 @@ def print_history(history):
         return
 
     print("\nWatch History:")
-    print("ID | Movie ID | Title | Watched At")
-    print("------------------------------------------")
+    print("ID | Movie ID | Movie Title")
+    print("-------------------------")
     for record in history:
-        print(f"{record[0]} | {record[1]} | {record[2]} | {record[3]}")
+        print(f"{record[0]} | {record[1]} | {record[2]}")
 
 
 async def register_user(auth_service):
