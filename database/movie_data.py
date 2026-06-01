@@ -18,16 +18,11 @@ class MovieData:
             await self.__db.rollback()  # Rollback if any db error occurs
             print("DB error:", e)
 
-    async def edit_movie(self, new_movie, movie_id):
+    async def edit_movie(self, new_title, movie_id):
         try:
             await self.__db.execute(
-                "UPDATE movies SET title = ?, likes = ? , views = ? WHERE id = ?",
-                (
-                    new_movie.get_title(),
-                    new_movie.get_likes(),
-                    new_movie.get_views(),
-                    movie_id,
-                ),
+                "UPDATE movies SET title = ? WHERE id = ?",
+                (new_title, movie_id),
             )
             await self.__db.commit()
         except Exception as e:
@@ -42,11 +37,12 @@ class MovieData:
             await self.__db.rollback()
             print("DB error:", e)
 
-    async def like_movie(self, likes, movie_id):
+    async def like_movie(self, movie_id):
         try:
             await self.__db.execute(
-                "UPDATE movies SET likes = ? WHERE id = ?", (likes, movie_id)
+                "UPDATE movies SET likes = likes + 1 WHERE id = ?", (movie_id,)
             )
+            await self.__db.commit()
         except Exception as e:
             await self.__db.rollback()
             print("DB error:", e)
@@ -57,6 +53,7 @@ class MovieData:
             await self.__db.execute(
                 "UPDATE movies SET views = ? WHERE id = ?", (views, movie_id)
             )
+            await self.__db.commit()
         except Exception as e:
             await self.__db.rollback()
             print("DB error:", e)
@@ -65,11 +62,10 @@ class MovieData:
     async def __store_history(self, user_id, movie_id):
         try:
             await self.__db.execute(
-                "INSERT OR REPLACE INTO history (user_id,movie_id) ",
+                "INSERT OR REPLACE INTO history (user_id, movie_id) VALUES (?, ?)",
                 (user_id, movie_id),  # Store Movies watched by this user
             )
             await self.__db.commit()
-            print("History stored Successfully")
         except Exception as e:
             await self.__db.rollback()
             print("Invalid DB query: ", e)
@@ -77,22 +73,32 @@ class MovieData:
     async def watch_history(self, user_id):
         try:
             result = await self.__db.execute(
-                "SELECT * FROM history WHERE user_id = ?",
-                (user_id),  # Movies watched by this user
+                "SELECT history.id, history.movie_id, movies.title, history.watched_at "
+                "FROM history JOIN movies ON history.movie_id = movies.id "
+                "WHERE history.user_id = ?",
+                (user_id,),
             )
-            return result.fetchall()
+            if not result:
+                return None
+            return await result.fetchall()
         except Exception as e:
             await self.__db.rollback()
             print("Invalid DB query: ", e)
+            return None
 
     async def watch_movie(self, movie_id, user_id):  # watch movie on base of id
         try:
-            movie = await self.__db.execute(
+            cursor = await self.__db.execute(
                 "SELECT * FROM movies WHERE id = ?", (movie_id,)
             )
-            await self.__views_increment(movie, id)  # On watch increment views
-            await self.__store_history(user_id, movie_id)  # Store in History
-            return movie.fetchone()
+            movie = await cursor.fetchone()
+            if not movie:
+                return None
+
+            current_views = movie[3] if len(movie) > 3 and movie[3] is not None else 0
+            await self.__views_increment(current_views + 1, movie_id)
+            await self.__store_history(user_id, movie_id)
+            return movie
         except Exception as e:
             await self.__db.rollback()
             print("DB error:", e)
@@ -101,7 +107,9 @@ class MovieData:
     async def list_movies(self):
         try:
             movies = await self.__db.execute("SELECT * FROM movies")
-            return movies.fetchall()
+            if not movies:
+                return None
+            return await movies.fetchall()
         except Exception as e:
             await self.__db.rollback()
             print("DB error:", e)

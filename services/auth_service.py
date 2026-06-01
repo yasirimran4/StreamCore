@@ -27,7 +27,8 @@ class Auth:
             elif user.get_role() != result[3]:
                 return {"message": "User does not exists with this role"}
             else:
-                return {"message": "User Loggedd in Successfully"}
+                user.set_login_status(True)
+                user.set_id(result[0])
+                return {"message": "User Logged in Successfully"}
         except Exception as e:
             print("Error ", e)
-            

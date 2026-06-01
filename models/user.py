@@ -1,11 +1,19 @@
 # User Class
 
+
 class User:
     def __init__(self, username="", password="", role="user"):
+        self.__id = None
         self.__username = username
         self.__password = password  # Private data members
         self.__role = role
         self.__login_status = False
+
+    def set_id(self, user_id):
+        self.__id = user_id
+
+    def get_id(self):
+        return self.__id
 
     def set_login_status(self, status):  # After login change status
         self.__login_status = status

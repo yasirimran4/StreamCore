@@ -1,9 +1,6 @@
 # Decorator to check status of user if Logged In.
-from functools import wraps
-
 
 def is_authenticated(func):
-    @wraps
     def wrapper(*args, **kwargs):
         user = args[1]
 
